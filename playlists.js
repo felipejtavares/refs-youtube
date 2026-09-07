@@ -1,11 +1,13 @@
 /*
- * Videoteca estática: não usa chave nem API do YouTube.
- * Para adicionar vídeos que apareçam em todos os seus dispositivos, coloque
- * um novo objeto em DEFAULT_PLAYLISTS e publique o arquivo novamente.
+ * A lista estática em `videos` é usada como backup. Para atualização automática,
+ * configure VIDEOTECA_API_ENDPOINT com a URL do Worker Cloudflare descrito no README.
  */
+window.VIDEOTECA_API_ENDPOINT = "";
+
 window.DEFAULT_PLAYLISTS = [
   {
     id: "motion",
+    youtubePlaylistId: "PLRQNkjQ891-sr3S-oJ1wMEgo3E5xcTCWD",
     name: "MOTION",
     description: "Referências de motion e identidade visual",
     videos: [

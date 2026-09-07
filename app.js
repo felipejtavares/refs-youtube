@@ -64,6 +64,15 @@ function playerUrl(videoId) {
   return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params}`;
 }
 
+async function fetchPlaylistFromWorker(playlist) {
+  const endpoint = (window.VIDEOTECA_API_ENDPOINT || "").replace(/\/$/, "");
+  if (!endpoint || !playlist.youtubePlaylistId) return null;
+  const response = await fetch(`${endpoint}/playlist/${encodeURIComponent(playlist.youtubePlaylistId)}`);
+  const data = await response.json();
+  if (!response.ok || !Array.isArray(data.items)) throw new Error(data.error || "Não foi possível atualizar a playlist.");
+  return data.items.map(normalizeVideo);
+}
+
 function renderVideos(videos) {
   elements.grid.replaceChildren();
   const template = $("#video-card-template");
@@ -81,15 +90,30 @@ function renderVideos(videos) {
   });
 }
 
-function openPlaylist(playlist) {
+async function openPlaylist(playlist) {
   state.current = playlist;
-  const videos = (playlist.videos || []).map(normalizeVideo);
+  let videos = (playlist.videos || []).map(normalizeVideo);
   document.title = `${playlist.name} · Minha Videoteca`;
   elements.title.textContent = playlist.name;
   elements.description.textContent = playlist.description || "";
   elements.count.textContent = `${videos.length} ${videos.length === 1 ? "vídeo" : "vídeos"}`;
   renderNav();
   renderVideos(videos);
+  if (!window.VIDEOTECA_API_ENDPOINT || !playlist.youtubePlaylistId) return;
+
+  elements.count.textContent = "Atualizando playlist…";
+  try {
+    const updatedVideos = await fetchPlaylistFromWorker(playlist);
+    if (!updatedVideos || state.current?.id !== playlist.id) return;
+    videos = updatedVideos;
+    renderVideos(videos);
+    elements.count.textContent = `${videos.length} ${videos.length === 1 ? "vídeo" : "vídeos"}`;
+  } catch (error) {
+    if (state.current?.id === playlist.id) {
+      elements.count.textContent = `${videos.length} vídeos · backup local`;
+      console.warn("Não foi possível atualizar a playlist:", error.message);
+    }
+  }
 }
 
 function chooseInitialPlaylist() {

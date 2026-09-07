@@ -1,12 +1,12 @@
 # Minha Videoteca
 
-Uma videoteca pessoal e estática para GitHub Pages. Não usa API, chave do Google, banco de dados ou servidor.
+Uma videoteca pessoal no GitHub Pages, com atualização automática de playlists via Cloudflare Worker.
 
 ## Como funciona
 
-Os vídeos da playlist `MOTION` já estão cadastrados em `playlists.js`, que contém os IDs, títulos e canais dos 18 vídeos. As capas vêm diretamente do CDN público de miniaturas do YouTube e o vídeo só é carregado quando você clica nele.
+Os 18 vídeos atuais da playlist `MOTION` ficam em `playlists.js` como backup. Quando o Worker está configurado, ele busca a playlist pública no YouTube e a grade é atualizada automaticamente. A chave da API nunca vai para o GitHub nem para o navegador.
 
-Como um site estático não pode obter, de modo confiável, a lista de vídeos de uma playlist do YouTube sem API, esta versão não se atualiza automaticamente quando você altera a playlist original no YouTube. Para atualizar a videoteca, edite `playlists.js` e publique de novo.
+O Worker guarda cada resultado por seis horas no cache do Cloudflare. Assim, as visitas repetidas não consomem a quota da API e as alterações no YouTube aparecem em até seis horas.
 
 ## Adicionar uma nova página em todos os dispositivos
 
@@ -15,6 +15,7 @@ No arquivo `playlists.js`, adicione outro objeto dentro de `DEFAULT_PLAYLISTS`:
 ```js
 {
   id: "referencias-design",
+  youtubePlaylistId: "ID_DA_PLAYLIST_DO_YOUTUBE",
   name: "Referências de design",
   description: "Vídeos para estudar",
   videos: [
@@ -25,7 +26,23 @@ No arquivo `playlists.js`, adicione outro objeto dentro de `DEFAULT_PLAYLISTS`:
 
 O ID é a parte depois de `v=` num link como `https://www.youtube.com/watch?v=ID_DO_VIDEO`. Essa página aparecerá no menu superior em todos os lugares onde você abrir o site.
 
-O botão **+ Playlist** é um atalho para criar uma coleção somente no navegador atual: cole um link de vídeo por linha. Para levar essa coleção para outros dispositivos, acrescente-a ao arquivo e publique novamente.
+Para que uma nova página também seja atualizada automaticamente, acrescente `youtubePlaylistId: "ID_DA_PLAYLIST"` ao objeto. O botão **+ Playlist** cria uma coleção somente no navegador atual: cole um link de vídeo por linha.
+
+## Configurar atualização automática
+
+1. No Google Cloud, crie uma chave com a **YouTube Data API v3** ativada.
+2. No painel Cloudflare, crie um Worker usando os arquivos da pasta `worker/`.
+3. Em **Worker → Settings → Variables and Secrets**, adicione o segredo `YOUTUBE_API_KEY` com a chave criada no Google. Não use variável de texto simples.
+4. Em `worker/wrangler.toml`, substitua `SITE_ORIGIN` pela URL exata do seu site publicado. Depois publique o Worker em um subdomínio, por exemplo `https://api.seudominio.com`.
+5. Em `playlists.js`, troque a linha abaixo pelo endereço do Worker:
+
+```js
+window.VIDEOTECA_API_ENDPOINT = "https://api.seudominio.com";
+```
+
+6. Publique `playlists.js` no GitHub Pages.
+
+Sem esse endereço, o site continua funcionando com a lista fixa de backup.
 
 ## Publicar gratuitamente
 
