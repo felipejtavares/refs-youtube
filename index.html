@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Uma videoteca simples para playlists do YouTube." />
+    <meta name="theme-color" content="#0b0d12" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Minha Videoteca</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Ir para a videoteca">
+        <span class="brand-mark" aria-hidden="true">▶</span>
+        <span>Minha Videoteca</span>
+      </a>
+
+      <nav id="playlist-nav" class="playlist-nav" aria-label="Playlists cadastradas"></nav>
+
+      <div class="header-actions">
+        <button id="add-playlist-button" class="button button-quiet" type="button">+ Playlist</button>
+        <button id="theme-button" class="icon-button" type="button" aria-label="Alternar tema" title="Alternar tema">☀</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">PLAYLIST</p>
+          <h1 id="page-title">Carregando…</h1>
+          <p id="playlist-description" class="muted"></p>
+        </div>
+        <p id="video-count" class="video-count"></p>
+      </section>
+
+      <section id="video-grid" class="video-grid" aria-label="Vídeos da playlist"></section>
+    </main>
+
+    <dialog id="playlist-dialog" class="form-dialog">
+      <form id="playlist-form" method="dialog">
+        <div class="form-header">
+          <div><p class="eyebrow">NOVA PÁGINA</p><h2>Adicionar playlist</h2></div>
+          <button class="icon-button" value="cancel" aria-label="Fechar">×</button>
+        </div>
+        <label for="playlist-name">Nome da página</label>
+        <input id="playlist-name" name="playlist-name" required maxlength="42" placeholder="Ex.: Aulas de design" />
+        <label for="video-links">Links dos vídeos</label>
+        <textarea id="video-links" name="video-links" required rows="6" placeholder="Um link de vídeo do YouTube por linha"></textarea>
+        <p class="help-text">Sem API, a lista é intencionalmente estática: cole um link de vídeo por linha. Cada coleção vira uma página no menu superior.</p>
+        <div class="form-actions">
+          <button class="button" value="save" type="submit">Adicionar página</button>
+        </div>
+      </form>
+    </dialog>
+
+    <template id="video-card-template">
+      <article class="video-card">
+        <div class="inline-player-wrap">
+          <iframe class="inline-player" title="Player de vídeo do YouTube" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <div class="card-info">
+          <h2 class="video-title"></h2>
+          <div class="card-actions">
+            <span class="channel-name"></span>
+            <a class="open-video" target="_blank" rel="noopener noreferrer" aria-label="Abrir no YouTube" title="Abrir no YouTube">↗</a>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="playlists.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
