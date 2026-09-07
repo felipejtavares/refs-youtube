@@ -1,11 +1,33 @@
 const STORAGE = { playlists: "videoteca:playlists", theme: "videoteca:theme" };
-const defaultPlaylists = window.DEFAULT_PLAYLISTS || [];
+const importedPlaylist = readTemporaryImport();
+const defaultPlaylists = (window.DEFAULT_PLAYLISTS || []).map((playlist) => (
+  playlist.id === importedPlaylist?.id
+    ? { ...playlist, videos: importedPlaylist.videos, description: "Atualizada localmente nesta aba" }
+    : playlist
+));
 const state = { playlists: loadPlaylists(), current: null };
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   nav: $("#playlist-nav"), title: $("#page-title"), description: $("#playlist-description"),
-  count: $("#video-count"), grid: $("#video-grid"), playlistDialog: $("#playlist-dialog"), theme: $("#theme-button"),
+  count: $("#video-count"), grid: $("#video-grid"), playlistDialog: $("#playlist-dialog"), importDialog: $("#import-dialog"), theme: $("#theme-button"),
 };
+
+function readTemporaryImport() {
+  try {
+    const params = new URLSearchParams(location.search);
+    const incoming = params.get("import");
+    if (incoming) {
+      const data = JSON.parse(incoming);
+      if (!data?.id || !Array.isArray(data.videos) || data.videos.length > 300) throw new Error("Importação inválida");
+      sessionStorage.setItem("videoteca:temporary-import", JSON.stringify(data));
+      params.delete("import");
+      const cleanUrl = `${location.pathname}${params.size ? `?${params}` : ""}${location.hash}`;
+      history.replaceState({}, "", cleanUrl);
+    }
+    const saved = JSON.parse(sessionStorage.getItem("videoteca:temporary-import"));
+    return saved?.id && Array.isArray(saved.videos) ? saved : null;
+  } catch { return null; }
+}
 
 function loadPlaylists() {
   try {
@@ -62,6 +84,12 @@ function playerUrl(videoId) {
   const params = new URLSearchParams({ rel: "0", modestbranding: "1", enablejsapi: "1" });
   if (location.origin && location.origin !== "null") params.set("origin", location.origin);
   return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params}`;
+}
+
+function bookmarkletCode() {
+  const destination = `${location.origin}${location.pathname}`;
+  const script = `(async()=>{const nap=(ms)=>new Promise((r)=>setTimeout(r,ms));let same=0,last=0;while(same<3){window.scrollTo(0,document.documentElement.scrollHeight);await nap(650);const n=document.querySelectorAll('ytd-playlist-video-renderer').length;same=n===last?same+1:0;last=n}const videos=[...document.querySelectorAll('ytd-playlist-video-renderer')].map((row)=>{const link=row.querySelector('a#video-title,a[href*="/watch?v="]');if(!link)return null;const url=new URL(link.href);const id=url.searchParams.get('v');return id?{id,title:link.textContent.trim(),channel:row.querySelector('ytd-channel-name a')?.textContent.trim()||'YouTube'}:null}).filter(Boolean);if(!videos.length){alert('Não encontrei vídeos. Abra uma página de playlist do YouTube e tente novamente.');return}const out=new URL(${JSON.stringify(destination)});out.searchParams.set('import',JSON.stringify({id:'motion',videos}));location.assign(out)})()`;
+  return `javascript:${script}`;
 }
 
 async function fetchPlaylistFromWorker(playlist) {
@@ -122,6 +150,8 @@ function chooseInitialPlaylist() {
 }
 
 $("#theme-button").addEventListener("click", () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark"));
+$("#update-playlist-button").addEventListener("click", () => elements.importDialog.showModal());
+$("#import-close").addEventListener("click", () => elements.importDialog.close());
 $("#add-playlist-button").addEventListener("click", () => elements.playlistDialog.showModal());
 $("#playlist-form").addEventListener("submit", (event) => {
   if (event.submitter?.value !== "save") return;
@@ -142,6 +172,12 @@ $("#playlist-form").addEventListener("submit", (event) => {
   location.href = `?page=${encodeURIComponent(id)}`;
 });
 $("#video-links").addEventListener("input", (event) => event.target.setCustomValidity(""));
+const bookmarklet = bookmarkletCode();
+$("#bookmarklet-link").href = bookmarklet;
+$("#copy-bookmarklet").addEventListener("click", async (event) => {
+  await navigator.clipboard.writeText(bookmarklet);
+  event.currentTarget.textContent = "Código copiado";
+});
 
 setTheme(localStorage.getItem(STORAGE.theme) || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
 openPlaylist(chooseInitialPlaylist());

@@ -19,6 +19,7 @@
       <nav id="playlist-nav" class="playlist-nav" aria-label="Playlists cadastradas"></nav>
 
       <div class="header-actions">
+        <button id="update-playlist-button" class="button button-quiet" type="button">↻ Atualizar</button>
         <button id="add-playlist-button" class="button button-quiet" type="button">+ Playlist</button>
         <button id="theme-button" class="icon-button" type="button" aria-label="Alternar tema" title="Alternar tema">☀</button>
       </div>
@@ -52,6 +53,20 @@
           <button class="button" value="save" type="submit">Adicionar página</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog id="import-dialog" class="form-dialog">
+      <div class="import-dialog-content">
+        <div class="form-header">
+          <div><p class="eyebrow">ATUALIZAÇÃO RÁPIDA</p><h2>Importar do YouTube</h2></div>
+          <button id="import-close" class="icon-button" type="button" aria-label="Fechar">×</button>
+        </div>
+        <p class="help-text">Sem API e sem chave: salve o botão abaixo nos favoritos. Depois, abra sua playlist pública no YouTube e clique nele.</p>
+        <a id="bookmarklet-link" class="button bookmarklet" href="#">↻ Atualizar videoteca</a>
+        <p class="help-text"><strong>No computador:</strong> arraste o botão para a barra de favoritos. Como alternativa, copie-o, crie um favorito e cole no campo de URL.</p>
+        <button id="copy-bookmarklet" class="button button-quiet" type="button">Copiar código do favorito</button>
+        <p class="help-text">A atualização vale somente para a aba aberta. Feche-a e a videoteca volta à lista fixa — nada é armazenado.</p>
+      </div>
     </dialog>
 
     <template id="video-card-template">

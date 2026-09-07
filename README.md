@@ -1,12 +1,16 @@
 # Minha Videoteca
 
-Uma videoteca pessoal no GitHub Pages, com atualização automática de playlists via Cloudflare Worker.
+Uma videoteca pessoal no GitHub Pages. A forma simples de atualizá-la não exige API, chave do Google nem Worker.
 
 ## Como funciona
 
-Os 18 vídeos atuais da playlist `MOTION` ficam em `playlists.js` como backup. Quando o Worker está configurado, ele busca a playlist pública no YouTube e a grade é atualizada automaticamente. A chave da API nunca vai para o GitHub nem para o navegador.
+Os 18 vídeos atuais da playlist `MOTION` ficam em `playlists.js` como backup. A página tem o botão **↻ Atualizar**, que mostra um favorito de atualização.
 
-O Worker guarda cada resultado por seis horas no cache do Cloudflare. Assim, as visitas repetidas não consomem a quota da API e as alterações no YouTube aparecem em até seis horas.
+1. Salve o favorito uma vez.
+2. Abra a playlist pública no YouTube.
+3. Clique no favorito.
+
+Ele percorre a página do YouTube, coleta os vídeos atuais e abre sua videoteca atualizada **somente naquela aba**. Ao fechar a aba, a atualização temporária desaparece e o site volta ao backup fixo. Para playlists grandes, espere a página do YouTube carregar até o fim antes de usar o favorito.
 
 ## Adicionar uma nova página em todos os dispositivos
 
@@ -28,19 +32,25 @@ O ID é a parte depois de `v=` num link como `https://www.youtube.com/watch?v=ID
 
 Para que uma nova página também seja atualizada automaticamente, acrescente `youtubePlaylistId: "ID_DA_PLAYLIST"` ao objeto. O botão **+ Playlist** cria uma coleção somente no navegador atual: cole um link de vídeo por linha.
 
-## Configurar atualização automática
+## Atualização automática pela API (opcional)
+
+Use esta alternativa somente se preferir atualização automática sem abrir o YouTube. Ela exige uma chave da API e o Worker Cloudflare.
 
 1. No Google Cloud, crie uma chave com a **YouTube Data API v3** ativada.
-2. No painel Cloudflare, crie um Worker usando os arquivos da pasta `worker/`.
-3. Em **Worker → Settings → Variables and Secrets**, adicione o segredo `YOUTUBE_API_KEY` com a chave criada no Google. Não use variável de texto simples.
-4. Em `worker/wrangler.toml`, substitua `SITE_ORIGIN` pela URL exata do seu site publicado. Depois publique o Worker em um subdomínio, por exemplo `https://api.seudominio.com`.
-5. Em `playlists.js`, troque a linha abaixo pelo endereço do Worker:
+2. No painel Cloudflare, abra **Workers & Pages → Create application → Worker**, dê um nome (por exemplo, `minha-videoteca-api`) e selecione **Deploy**.
+3. Abra o Worker criado, clique em **Edit Code**, substitua todo o conteúdo pelo arquivo `worker/worker.js` deste projeto e clique em **Deploy**. Não envie a pasta nem procure um carregador de arquivos.
+4. No Worker, abra **Settings → Variables and Secrets → Add** e crie:
+   - `YOUTUBE_API_KEY`: tipo **Secret**, com a chave do Google.
+   - `SITE_ORIGIN`: tipo **Text**, com a origem exata do GitHub Pages, por exemplo `https://seu-usuario.github.io` (sem barra final e sem o caminho do repositório).
+   - `ALLOWED_PLAYLIST_IDS`: tipo **Text**, com `PLRQNkjQ891-sr3S-oJ1wMEgo3E5xcTCWD`.
+5. Clique em **Deploy** e copie o endereço `https://NOME-DO-WORKER.SUA-CONTA.workers.dev` mostrado pelo Cloudflare. Não é necessário ter domínio próprio para isso.
+6. Em `playlists.js`, troque a linha abaixo pelo endereço do Worker:
 
 ```js
 window.VIDEOTECA_API_ENDPOINT = "https://api.seudominio.com";
 ```
 
-6. Publique `playlists.js` no GitHub Pages.
+7. Publique `playlists.js` no GitHub Pages.
 
 Sem esse endereço, o site continua funcionando com a lista fixa de backup.
 
